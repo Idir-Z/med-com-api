@@ -1,0 +1,39 @@
+{
+  "annotations": {
+    "changelogDate": "20251203173513"
+  },
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "lastAvailability",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "lastAvailabilityTime",
+      "fieldType": "ZonedDateTime"
+    }
+  ],
+  "jpaMetamodelFiltering": false,
+  "name": "WatchListItem",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityField": "id",
+      "otherEntityName": "product",
+      "otherEntityRelationshipName": "watchListItem",
+      "relationshipName": "product",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityField": "id",
+      "otherEntityName": "pharmacy",
+      "relationshipName": "pharmacy",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

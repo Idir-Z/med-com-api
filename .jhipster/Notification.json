@@ -1,0 +1,86 @@
+{
+  "annotations": {
+    "changelogDate": "20251203174546"
+  },
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "notificationType",
+      "fieldType": "NotificationType",
+      "fieldValues": "SMS,EMAIL,WHATSAPP"
+    },
+    {
+      "fieldName": "message",
+      "fieldType": "String",
+      "fieldValidateRules": ["maxlength"],
+      "fieldValidateRulesMaxlength": "2000"
+    },
+    {
+      "fieldName": "readAt",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "sent",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "sentAt",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "delivered",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "deliveredAt",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "failed",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "failedAt",
+      "fieldType": "ZonedDateTime"
+    },
+    {
+      "fieldName": "failureReason",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "externalMessageId",
+      "fieldType": "String"
+    }
+  ],
+  "jpaMetamodelFiltering": false,
+  "name": "Notification",
+  "pagination": "pagination",
+  "readOnly": false,
+  "relationships": [
+    {
+      "otherEntityField": "id",
+      "otherEntityName": "pharmacy",
+      "relationshipName": "pharmacy",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityField": "login",
+      "otherEntityName": "user",
+      "otherEntityRelationshipName": "notification",
+      "relationshipName": "user",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    },
+    {
+      "otherEntityField": "id",
+      "otherEntityName": "watchListItem",
+      "otherEntityRelationshipName": "notification",
+      "relationshipName": "watchListItem",
+      "relationshipSide": "left",
+      "relationshipType": "many-to-one"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}
