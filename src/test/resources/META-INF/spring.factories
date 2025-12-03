@@ -1,0 +1,2 @@
+org.springframework.test.context.ContextCustomizerFactory = \
+    com.zidir.medcom.config.SqlTestContainersSpringContextCustomizerFactory
