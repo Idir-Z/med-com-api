@@ -32,6 +32,12 @@ public class WatchListItem implements Serializable {
     @Column(name = "last_availability_time")
     private ZonedDateTime lastAvailabilityTime;
 
+    @Column(name = "notify_all_users", nullable = false)
+    private Boolean notifyAllUsers = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User createdBy;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties(value = { "watchListItems" }, allowSetters = true)
     private Product product;
@@ -83,6 +89,32 @@ public class WatchListItem implements Serializable {
 
     public void setLastAvailabilityTime(ZonedDateTime lastAvailabilityTime) {
         this.lastAvailabilityTime = lastAvailabilityTime;
+    }
+
+    public Boolean getNotifyAllUsers() {
+        return this.notifyAllUsers;
+    }
+
+    public WatchListItem notifyAllUsers(Boolean notifyAllUsers) {
+        this.setNotifyAllUsers(notifyAllUsers);
+        return this;
+    }
+
+    public void setNotifyAllUsers(Boolean notifyAllUsers) {
+        this.notifyAllUsers = notifyAllUsers;
+    }
+
+    public User getCreatedBy() {
+        return this.createdBy;
+    }
+
+    public void setCreatedBy(User user) {
+        this.createdBy = user;
+    }
+
+    public WatchListItem createdBy(User user) {
+        this.setCreatedBy(user);
+        return this;
     }
 
     public Product getProduct() {
@@ -168,6 +200,7 @@ public class WatchListItem implements Serializable {
             "id=" + getId() +
             ", lastAvailability='" + getLastAvailability() + "'" +
             ", lastAvailabilityTime='" + getLastAvailabilityTime() + "'" +
+            ", notifyAllUsers='" + getNotifyAllUsers() + "'" +
             "}";
     }
 }

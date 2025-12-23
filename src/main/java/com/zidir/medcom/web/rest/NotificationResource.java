@@ -186,4 +186,86 @@ public class NotificationResource {
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }
+
+    /**
+     * {@code GET  /notifications/my} : get all notifications for the current user.
+     *
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of notifications in body.
+     */
+    @GetMapping("/my")
+    public ResponseEntity<List<NotificationDTO>> getMyNotifications(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+        LOG.debug("REST request to get current user's notifications");
+        Page<NotificationDTO> page = notificationService.findByCurrentUser(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /notifications/my-pharmacy} : get all notifications for the current user's pharmacy.
+     *
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of notifications in body.
+     */
+    @GetMapping("/my-pharmacy")
+    public ResponseEntity<List<NotificationDTO>> getMyPharmacyNotifications(
+        @org.springdoc.core.annotations.ParameterObject Pageable pageable
+    ) {
+        LOG.debug("REST request to get current user's pharmacy notifications");
+        Page<NotificationDTO> page = notificationService.findByCurrentUserPharmacy(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /notifications/unread} : get all unread notifications for the current user.
+     *
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of unread notifications in body.
+     */
+    @GetMapping("/unread")
+    public ResponseEntity<List<NotificationDTO>> getUnreadNotifications(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
+        LOG.debug("REST request to get unread notifications for current user");
+        Page<NotificationDTO> page = notificationService.findUnreadByCurrentUser(pageable);
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
+        return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * {@code GET  /notifications/unread/count} : count unread notifications for the current user.
+     *
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     */
+    @GetMapping("/unread/count")
+    public ResponseEntity<Long> countUnreadNotifications() {
+        LOG.debug("REST request to count unread notifications for current user");
+        long count = notificationService.countUnreadByCurrentUser();
+        return ResponseEntity.ok().body(count);
+    }
+
+    /**
+     * {@code PUT  /notifications/:id/mark-as-read} : mark a notification as read.
+     *
+     * @param id the id of the notification to mark as read.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated notificationDTO,
+     * or with status {@code 404 (Not Found)} if the notification is not found.
+     */
+    @PutMapping("/{id}/mark-as-read")
+    public ResponseEntity<NotificationDTO> markNotificationAsRead(@PathVariable("id") Long id) {
+        LOG.debug("REST request to mark Notification {} as read", id);
+        Optional<NotificationDTO> result = notificationService.markAsRead(id);
+        return ResponseUtil.wrapOrNotFound(result, HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, id.toString()));
+    }
+
+    /**
+     * {@code PUT  /notifications/mark-all-as-read} : mark all notifications as read for the current user.
+     *
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count of marked notifications in body.
+     */
+    @PutMapping("/mark-all-as-read")
+    public ResponseEntity<Long> markAllNotificationsAsRead() {
+        LOG.debug("REST request to mark all notifications as read for current user");
+        long count = notificationService.markAllAsReadForCurrentUser();
+        return ResponseEntity.ok().body(count);
+    }
 }

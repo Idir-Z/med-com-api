@@ -20,6 +20,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserMapper {
 
+    private final PharmacyMapper pharmacyMapper;
+
+    public UserMapper(PharmacyMapper pharmacyMapper) {
+        this.pharmacyMapper = pharmacyMapper;
+    }
+
     public List<UserDTO> usersToUserDTOs(List<User> users) {
         return users.stream().filter(Objects::nonNull).map(this::userToUserDTO).toList();
     }
@@ -59,6 +65,9 @@ public class UserMapper {
             user.setLangKey(userDTO.getLangKey());
             Set<Authority> authorities = this.authoritiesFromStrings(userDTO.getAuthorities());
             user.setAuthorities(authorities);
+            if (userDTO.getPharmacyId() != null) {
+                user.setPharmacy(pharmacyFromId(userDTO.getPharmacyId()));
+            }
             return user;
         }
     }
@@ -87,6 +96,15 @@ public class UserMapper {
         User user = new User();
         user.setId(id);
         return user;
+    }
+
+    private com.zidir.medcom.domain.Pharmacy pharmacyFromId(Long id) {
+        if (id == null) {
+            return null;
+        }
+        com.zidir.medcom.domain.Pharmacy pharmacy = new com.zidir.medcom.domain.Pharmacy();
+        pharmacy.setId(id);
+        return pharmacy;
     }
 
     @Named("id")

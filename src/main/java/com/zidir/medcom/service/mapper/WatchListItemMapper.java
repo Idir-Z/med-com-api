@@ -2,9 +2,11 @@ package com.zidir.medcom.service.mapper;
 
 import com.zidir.medcom.domain.Pharmacy;
 import com.zidir.medcom.domain.Product;
+import com.zidir.medcom.domain.User;
 import com.zidir.medcom.domain.WatchListItem;
 import com.zidir.medcom.service.dto.PharmacyDTO;
 import com.zidir.medcom.service.dto.ProductDTO;
+import com.zidir.medcom.service.dto.UserDTO;
 import com.zidir.medcom.service.dto.WatchListItemDTO;
 import org.mapstruct.*;
 
@@ -15,6 +17,7 @@ import org.mapstruct.*;
 public interface WatchListItemMapper extends EntityMapper<WatchListItemDTO, WatchListItem> {
     @Mapping(target = "product", source = "product", qualifiedByName = "productId")
     @Mapping(target = "pharmacy", source = "pharmacy", qualifiedByName = "pharmacyId")
+    @Mapping(target = "createdBy", source = "createdBy", qualifiedByName = "userLogin")
     WatchListItemDTO toDto(WatchListItem s);
 
     @Named("productId")
@@ -26,4 +29,10 @@ public interface WatchListItemMapper extends EntityMapper<WatchListItemDTO, Watc
     @BeanMapping(ignoreByDefault = true)
     @Mapping(target = "id", source = "id")
     PharmacyDTO toDtoPharmacyId(Pharmacy pharmacy);
+
+    @Named("userLogin")
+    @BeanMapping(ignoreByDefault = true)
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "login", source = "login")
+    UserDTO toDtoUserLogin(User user);
 }

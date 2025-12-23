@@ -16,6 +16,10 @@ public class WatchListItemDTO implements Serializable {
 
     private ZonedDateTime lastAvailabilityTime;
 
+    private Boolean notifyAllUsers;
+
+    private UserDTO createdBy;
+
     private ProductDTO product;
 
     private PharmacyDTO pharmacy;
@@ -42,6 +46,22 @@ public class WatchListItemDTO implements Serializable {
 
     public void setLastAvailabilityTime(ZonedDateTime lastAvailabilityTime) {
         this.lastAvailabilityTime = lastAvailabilityTime;
+    }
+
+    public Boolean getNotifyAllUsers() {
+        return notifyAllUsers;
+    }
+
+    public void setNotifyAllUsers(Boolean notifyAllUsers) {
+        this.notifyAllUsers = notifyAllUsers;
+    }
+
+    public UserDTO getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(UserDTO createdBy) {
+        this.createdBy = createdBy;
     }
 
     public ProductDTO getProduct() {
@@ -88,6 +108,8 @@ public class WatchListItemDTO implements Serializable {
             "id=" + getId() +
             ", lastAvailability='" + getLastAvailability() + "'" +
             ", lastAvailabilityTime='" + getLastAvailabilityTime() + "'" +
+            ", notifyAllUsers='" + getNotifyAllUsers() + "'" +
+            ", createdBy=" + getCreatedBy() +
             ", product=" + getProduct() +
             ", pharmacy=" + getPharmacy() +
             "}";

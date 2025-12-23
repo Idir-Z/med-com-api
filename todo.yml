@@ -1,0 +1,5 @@
+Make better simpler architecture (notification represents watchlist): Done
+Remake or copy the logic: Pending
+Get rid of priorities and make just one unified scheduler: Pending
+Notification history (with what happened in the notif) (notif history per user and p/er item): Pending
+Update URL paths and export them (Java doc swagger, akken tevghid): Pending

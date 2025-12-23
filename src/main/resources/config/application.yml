@@ -229,4 +229,10 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-# application:
+application:
+  availability-check:
+    interval-minutes: 30 # Check every 30 minutes (configurable)
+  supplier-api:
+    enabled: false # Set to true when ready to use real API
+    base-url: '' # e.g., 'https://api.supplier.com'
+

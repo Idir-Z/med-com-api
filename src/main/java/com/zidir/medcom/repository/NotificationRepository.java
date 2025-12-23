@@ -1,6 +1,7 @@
 package com.zidir.medcom.repository;
 
 import com.zidir.medcom.domain.Notification;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,18 @@ import org.springframework.stereotype.Repository;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     @Query("select notification from Notification notification where notification.user.login = ?#{authentication.name}")
     List<Notification> findByUserIsCurrentUser();
+
+    Page<Notification> findByUserId(Long userId, Pageable pageable);
+
+    Page<Notification> findByPharmacyId(Long pharmacyId, Pageable pageable);
+
+    Page<Notification> findByUserIdAndReadAtIsNull(Long userId, Pageable pageable);
+
+    long countByUserIdAndReadAtIsNull(Long userId);
+
+    @Modifying
+    @Query("update Notification n set n.readAt = :readAt where n.user.id = :userId and n.readAt is null")
+    int markAllAsReadForUser(@Param("userId") Long userId, @Param("readAt") ZonedDateTime readAt);
 
     default Optional<Notification> findOneWithEagerRelationships(Long id) {
         return this.findOneWithToOneRelationships(id);

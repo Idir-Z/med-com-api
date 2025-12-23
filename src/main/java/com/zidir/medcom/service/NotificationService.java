@@ -1,9 +1,14 @@
 package com.zidir.medcom.service;
 
 import com.zidir.medcom.domain.Notification;
+import com.zidir.medcom.domain.User;
 import com.zidir.medcom.repository.NotificationRepository;
+import com.zidir.medcom.repository.UserRepository;
+import com.zidir.medcom.security.SecurityUtils;
 import com.zidir.medcom.service.dto.NotificationDTO;
 import com.zidir.medcom.service.mapper.NotificationMapper;
+import com.zidir.medcom.web.rest.errors.BadRequestAlertException;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +30,31 @@ public class NotificationService {
 
     private final NotificationMapper notificationMapper;
 
-    public NotificationService(NotificationRepository notificationRepository, NotificationMapper notificationMapper) {
+    private final UserRepository userRepository;
+
+    public NotificationService(
+        NotificationRepository notificationRepository,
+        NotificationMapper notificationMapper,
+        UserRepository userRepository
+    ) {
         this.notificationRepository = notificationRepository;
         this.notificationMapper = notificationMapper;
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Get the current authenticated user.
+     *
+     * @return the current user
+     * @throws BadRequestAlertException if user is not authenticated or not found
+     */
+    private User getCurrentUser() {
+        String login = SecurityUtils.getCurrentUserLogin()
+            .orElseThrow(() -> new BadRequestAlertException("User not authenticated", "notification", "notauthenticated"));
+
+        return userRepository
+            .findOneByLogin(login)
+            .orElseThrow(() -> new BadRequestAlertException("User not found", "notification", "usernotfound"));
     }
 
     /**
@@ -117,5 +144,104 @@ public class NotificationService {
     public void delete(Long id) {
         LOG.debug("Request to delete Notification : {}", id);
         notificationRepository.deleteById(id);
+    }
+
+    /**
+     * Get notifications for the current user.
+     *
+     * @param pageable the pagination information.
+     * @return the list of notifications for the current user.
+     */
+    @Transactional(readOnly = true)
+    public Page<NotificationDTO> findByCurrentUser(Pageable pageable) {
+        LOG.debug("Request to get notifications for current user");
+        User currentUser = getCurrentUser();
+        return notificationRepository.findByUserId(currentUser.getId(), pageable).map(notificationMapper::toDto);
+    }
+
+    /**
+     * Get notifications for the current user's pharmacy.
+     *
+     * @param pageable the pagination information.
+     * @return the list of notifications for the current user's pharmacy.
+     */
+    @Transactional(readOnly = true)
+    public Page<NotificationDTO> findByCurrentUserPharmacy(Pageable pageable) {
+        LOG.debug("Request to get notifications for current user's pharmacy");
+        User currentUser = getCurrentUser();
+
+        if (currentUser.getPharmacy() == null) {
+            throw new BadRequestAlertException("User has no pharmacy", "notification", "nopharmacy");
+        }
+
+        return notificationRepository.findByPharmacyId(currentUser.getPharmacy().getId(), pageable).map(notificationMapper::toDto);
+    }
+
+    /**
+     * Get unread notifications for the current user.
+     *
+     * @param pageable the pagination information.
+     * @return the list of unread notifications for the current user.
+     */
+    @Transactional(readOnly = true)
+    public Page<NotificationDTO> findUnreadByCurrentUser(Pageable pageable) {
+        LOG.debug("Request to get unread notifications for current user");
+        User currentUser = getCurrentUser();
+        return notificationRepository.findByUserIdAndReadAtIsNull(currentUser.getId(), pageable).map(notificationMapper::toDto);
+    }
+
+    /**
+     * Mark a notification as read.
+     *
+     * @param id the id of the notification.
+     * @return the updated notification.
+     */
+    public Optional<NotificationDTO> markAsRead(Long id) {
+        LOG.debug("Request to mark notification {} as read", id);
+
+        return notificationRepository
+            .findById(id)
+            .map(notification -> {
+                User currentUser = getCurrentUser();
+
+                // Verify that the notification belongs to the current user
+                if (notification.getUser() == null || !notification.getUser().getId().equals(currentUser.getId())) {
+                    throw new BadRequestAlertException("Cannot mark another user's notification as read", "notification", "accessdenied");
+                }
+
+                if (notification.getReadAt() == null) {
+                    notification.setReadAt(ZonedDateTime.now());
+                }
+
+                return notification;
+            })
+            .map(notificationRepository::save)
+            .map(notificationMapper::toDto);
+    }
+
+    /**
+     * Mark all notifications as read for the current user.
+     *
+     * @return the number of notifications marked as read.
+     */
+    public long markAllAsReadForCurrentUser() {
+        LOG.debug("Request to mark all notifications as read for current user");
+
+        User currentUser = getCurrentUser();
+        ZonedDateTime now = ZonedDateTime.now();
+
+        return notificationRepository.markAllAsReadForUser(currentUser.getId(), now);
+    }
+
+    /**
+     * Count unread notifications for the current user.
+     *
+     * @return the count of unread notifications.
+     */
+    @Transactional(readOnly = true)
+    public long countUnreadByCurrentUser() {
+        LOG.debug("Request to count unread notifications for current user");
+        User currentUser = getCurrentUser();
+        return notificationRepository.countByUserIdAndReadAtIsNull(currentUser.getId());
     }
 }
