@@ -1,12 +1,14 @@
 package com.zidir.medcom.service.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import com.zidir.medcom.domain.Authority;
 import com.zidir.medcom.domain.User;
 import com.zidir.medcom.security.AuthoritiesConstants;
 import com.zidir.medcom.service.dto.AdminUserDTO;
 import com.zidir.medcom.service.dto.UserDTO;
+import com.zidir.medcom.service.mapper.PharmacyMapper;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -15,6 +17,7 @@ import java.util.Set;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 
 /**
  * Unit tests for {@link UserMapper}.
@@ -30,7 +33,8 @@ class UserMapperTest {
 
     @BeforeEach
     void init() {
-        userMapper = new UserMapper();
+        // Initialize the UserMapper with a mocked PharmacyMapper
+        userMapper = new UserMapper(mock(PharmacyMapper.class));
         user = new User();
         user.setLogin(DEFAULT_LOGIN);
         user.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));

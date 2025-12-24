@@ -163,7 +163,7 @@ public class AvailabilityMonitoringService {
                 notification.setUser(user);
                 notification.setPharmacy(watchListItem.getPharmacy());
                 notification.setWatchListItem(watchListItem);
-                notification.setNotificationType(NotificationType.AVAILABILITY_CHANGE);
+                //notification.setNotificationType(NotificationType.AVAILABILITY_CHANGE);
 
                 String productName = watchListItem.getProduct().getName() != null
                     ? watchListItem.getProduct().getName()
