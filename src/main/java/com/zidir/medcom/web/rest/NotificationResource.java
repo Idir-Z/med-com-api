@@ -49,11 +49,13 @@ public class NotificationResource {
 
     /**
      * {@code POST  /notifications} : Create a new notification.
+     * DISABLED: Notifications are created by backend services only
      *
      * @param notificationDTO the notificationDTO to create.
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new notificationDTO, or with status {@code 400 (Bad Request)} if the notification has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    /*
     @PostMapping("")
     public ResponseEntity<NotificationDTO> createNotification(@Valid @RequestBody NotificationDTO notificationDTO)
         throws URISyntaxException {
@@ -66,9 +68,11 @@ public class NotificationResource {
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, notificationDTO.getId().toString()))
             .body(notificationDTO);
     }
+    */
 
     /**
      * {@code PUT  /notifications/:id} : Updates an existing notification.
+     * DISABLED: Notifications are updated by backend services only
      *
      * @param id the id of the notificationDTO to save.
      * @param notificationDTO the notificationDTO to update.
@@ -77,6 +81,7 @@ public class NotificationResource {
      * or with status {@code 500 (Internal Server Error)} if the notificationDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    /*
     @PutMapping("/{id}")
     public ResponseEntity<NotificationDTO> updateNotification(
         @PathVariable(value = "id", required = false) final Long id,
@@ -99,9 +104,11 @@ public class NotificationResource {
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, notificationDTO.getId().toString()))
             .body(notificationDTO);
     }
+    */
 
     /**
      * {@code PATCH  /notifications/:id} : Partial updates given fields of an existing notification, field will ignore if it is null
+     * DISABLED: Notifications are updated by backend services only
      *
      * @param id the id of the notificationDTO to save.
      * @param notificationDTO the notificationDTO to update.
@@ -111,6 +118,7 @@ public class NotificationResource {
      * or with status {@code 500 (Internal Server Error)} if the notificationDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
+    /*
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
     public ResponseEntity<NotificationDTO> partialUpdateNotification(
         @PathVariable(value = "id", required = false) final Long id,
@@ -135,9 +143,11 @@ public class NotificationResource {
             HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, notificationDTO.getId().toString())
         );
     }
+    */
 
     /**
-     * {@code GET  /notifications} : get all the notifications.
+     * {@code GET  /notifications} : get all the notifications for current user's pharmacy.
+     * MODIFIED: Returns only notifications for the current user's pharmacy instead of all notifications
      *
      * @param pageable the pagination information.
      * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
@@ -148,13 +158,8 @@ public class NotificationResource {
         @org.springdoc.core.annotations.ParameterObject Pageable pageable,
         @RequestParam(name = "eagerload", required = false, defaultValue = "true") boolean eagerload
     ) {
-        LOG.debug("REST request to get a page of Notifications");
-        Page<NotificationDTO> page;
-        if (eagerload) {
-            page = notificationService.findAllWithEagerRelationships(pageable);
-        } else {
-            page = notificationService.findAll(pageable);
-        }
+        LOG.debug("REST request to get a page of Notifications for current user's pharmacy");
+        Page<NotificationDTO> page = notificationService.findByCurrentUserPharmacy(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
     }

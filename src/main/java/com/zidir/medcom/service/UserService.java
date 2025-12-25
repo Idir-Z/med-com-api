@@ -2,8 +2,10 @@ package com.zidir.medcom.service;
 
 import com.zidir.medcom.config.Constants;
 import com.zidir.medcom.domain.Authority;
+import com.zidir.medcom.domain.Pharmacy;
 import com.zidir.medcom.domain.User;
 import com.zidir.medcom.repository.AuthorityRepository;
+import com.zidir.medcom.repository.PharmacyRepository;
 import com.zidir.medcom.repository.UserRepository;
 import com.zidir.medcom.security.AuthoritiesConstants;
 import com.zidir.medcom.security.SecurityUtils;
@@ -39,17 +41,21 @@ public class UserService {
 
     private final AuthorityRepository authorityRepository;
 
+    private final PharmacyRepository pharmacyRepository;
+
     private final CacheManager cacheManager;
 
     public UserService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         AuthorityRepository authorityRepository,
+        PharmacyRepository pharmacyRepository,
         CacheManager cacheManager
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authorityRepository = authorityRepository;
+        this.pharmacyRepository = pharmacyRepository;
         this.cacheManager = cacheManager;
     }
 
@@ -174,10 +180,63 @@ public class UserService {
                 .collect(Collectors.toSet());
             user.setAuthorities(authorities);
         }
+        // Set pharmacy if pharmacyId is provided
+        if (userDTO.getPharmacyId() != null) {
+            pharmacyRepository.findById(userDTO.getPharmacyId()).ifPresent(user::setPharmacy);
+        }
         userRepository.save(user);
         this.clearUserCaches(user);
         LOG.debug("Created Information for User: {}", user);
         return user;
+    }
+
+    /**
+     * Register a pharmacy with its admin user.
+     *
+     * @param pharmacy the pharmacy entity to create.
+     * @param adminUserDTO admin user data.
+     * @param password admin user password.
+     * @return the created admin user.
+     */
+    public User registerPharmacyWithAdmin(Pharmacy pharmacy, AdminUserDTO adminUserDTO, String password) {
+        LOG.debug("Registering pharmacy with admin: pharmacy={}, admin={}", pharmacy.getName(), adminUserDTO.getLogin());
+
+        // Save pharmacy first
+        Pharmacy savedPharmacy = pharmacyRepository.save(pharmacy);
+        LOG.debug("Pharmacy created with ID: {}", savedPharmacy.getId());
+
+        // Create admin user
+        User adminUser = new User();
+        adminUser.setLogin(adminUserDTO.getLogin().toLowerCase());
+        adminUser.setFirstName(adminUserDTO.getFirstName());
+        adminUser.setLastName(adminUserDTO.getLastName());
+        if (adminUserDTO.getEmail() != null) {
+            adminUser.setEmail(adminUserDTO.getEmail().toLowerCase());
+        }
+        adminUser.setImageUrl(adminUserDTO.getImageUrl());
+        if (adminUserDTO.getLangKey() == null) {
+            adminUser.setLangKey(Constants.DEFAULT_LANGUAGE);
+        } else {
+            adminUser.setLangKey(adminUserDTO.getLangKey());
+        }
+
+        String encryptedPassword = passwordEncoder.encode(password);
+        adminUser.setPassword(encryptedPassword);
+        adminUser.setActivated(true);
+
+        // Link admin user to pharmacy
+        adminUser.setPharmacy(savedPharmacy);
+
+        // Set ADMIN authority
+        Set<Authority> authorities = new HashSet<>();
+        authorityRepository.findById(AuthoritiesConstants.ADMIN).ifPresent(authorities::add);
+        adminUser.setAuthorities(authorities);
+
+        userRepository.save(adminUser);
+        this.clearUserCaches(adminUser);
+        LOG.debug("Created admin user for pharmacy: {}", adminUser);
+
+        return adminUser;
     }
 
     /**

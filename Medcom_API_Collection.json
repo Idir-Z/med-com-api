@@ -1,9 +1,9 @@
 {
   "info": {
+    "_postman_id": "e4e5f8f8-8e7d-4b4c-9b7c-8d9e8f8g8h9i",
     "name": "Medcom API Collection",
-    "description": "API collection for Medcom application with comprehensive endpoints documentation and test cases",
-    "_postman_id": "medcom-api-collection",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collections.json"
+    "description": "Complete API collection for testing all Medcom functionality",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
@@ -11,6 +11,23 @@
       "item": [
         {
           "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseJson = pm.response.json();",
+                  "pm.globals.set('authToken', responseJson.id_token);",
+                  "pm.globals.set('userId', responseJson.user.id);",
+                  "pm.test('Login successful', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(responseJson).to.have.property('id_token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -27,675 +44,73 @@
               "raw": "{{baseUrl}}/api/authenticate",
               "host": ["{{baseUrl}}"],
               "path": ["api", "authenticate"]
-            },
-            "description": "Authenticate user and get JWT token"
+            }
           },
           "response": []
         },
         {
-          "name": "Check Authentication",
+          "name": "Check Authentication Status",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/authenticate",
               "host": ["{{baseUrl}}"],
               "path": ["api", "authenticate"]
-            },
-            "description": "Check if user is authenticated"
+            }
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Account Management",
+      "name": "Pharmacy Management",
       "item": [
         {
-          "name": "Register Account",
+          "name": "Create Pharmacy (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseJson = pm.response.json();",
+                  "pm.globals.set('pharmacyId', responseJson.id);",
+                  "pm.test('Pharmacy created successfully', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson.name).to.eql('Test Pharmacy');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"testuser\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"langKey\": \"en\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "register"]
-            },
-            "description": "Register a new user account"
-          },
-          "response": []
-        },
-        {
-          "name": "Activate Account",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/activate?key=activation-key",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "activate"],
-              "query": [
-                {
-                  "key": "key",
-                  "value": "activation-key"
-                }
-              ]
-            },
-            "description": "Activate a registered user account"
-          },
-          "response": []
-        },
-        {
-          "name": "Get Current Account",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
                 "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/account",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "account"]
-            },
-            "description": "Get current user's account information"
-          },
-          "response": []
-        },
-        {
-          "name": "Update Account",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+                "value": "Bearer {{authToken}}"
               },
               {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": 1,\n  \"login\": \"admin\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"email\": \"admin@localhost\",\n  \"activated\": true,\n  \"langKey\": \"en\",\n  \"imageUrl\": \"\",\n  \"createdBy\": \"system\",\n  \"createdDate\": \"2023-01-01T00:00:00Z\",\n  \"lastModifiedBy\": \"admin\",\n  \"lastModifiedDate\": \"2023-01-01T00:00:00Z\",\n  \"authorities\": [\"ROLE_ADMIN\"]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/account",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "account"]
-            },
-            "description": "Update current user's account information"
-          },
-          "response": []
-        },
-        {
-          "name": "Change Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"currentPassword\": \"current-password\",\n  \"newPassword\": \"new-password\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/account/change-password",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "account", "change-password"]
-            },
-            "description": "Change current user's password"
-          },
-          "response": []
-        },
-        {
-          "name": "Request Password Reset",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "text/plain"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "user@example.com"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/account/reset-password/init",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "account", "reset-password", "init"]
-            },
-            "description": "Request password reset for a user"
-          },
-          "response": []
-        },
-        {
-          "name": "Complete Password Reset",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"key\": \"reset-key\",\n  \"newPassword\": \"new-password\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/account/reset-password/finish",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "account", "reset-password", "finish"]
-            },
-            "description": "Complete password reset with key and new password"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "User Management (Admin Only)",
-      "item": [
-        {
-          "name": "Create User",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"login\": \"newuser\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"email\": \"newuser@example.com\",\n  \"activated\": true,\n  \"langKey\": \"en\",\n  \"authorities\": [\"ROLE_USER\"]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/admin/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"]
-            },
-            "description": "Create a new user (admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "Update User",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": 1,\n  \"login\": \"admin\",\n  \"firstName\": \"Updated Admin\",\n  \"lastName\": \"User\",\n  \"email\": \"admin@localhost\",\n  \"activated\": true,\n  \"langKey\": \"en\",\n  \"authorities\": [\"ROLE_ADMIN\"]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/admin/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"]
-            },
-            "description": "Update an existing user (admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "Get All Users",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/admin/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users"]
-            },
-            "description": "Get all users (admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "Get User by Login",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/admin/users/admin",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "admin"]
-            },
-            "description": "Get user by login (admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete User",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/admin/users/testuser",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "admin", "users", "testuser"]
-            },
-            "description": "Delete user by login (admin only)"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Public Users",
-      "item": [
-        {
-          "name": "Get All Public Users",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/users",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users"]
-            },
-            "description": "Get all public user information"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Authorities (Admin Only)",
-      "item": [
-        {
-          "name": "Create Authority",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"ROLE_NEW_ROLE\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/authorities",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "authorities"]
-            },
-            "description": "Create a new authority (admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "Get All Authorities",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/authorities",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "authorities"]
-            },
-            "description": "Get all authorities (admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "Get Authority by Name",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/authorities/ROLE_ADMIN",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "authorities", "ROLE_ADMIN"]
-            },
-            "description": "Get authority by name (admin only)"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Authority",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/authorities/ROLE_NEW_ROLE",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "authorities", "ROLE_NEW_ROLE"]
-            },
-            "description": "Delete authority by name (admin only)"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Products",
-      "item": [
-        {
-          "name": "Create Product",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Sample Product\",\n  \"description\": \"Product description\",\n  \"price\": 19.99,\n  \"category\": \"Medicine\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/products",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products"]
-            },
-            "description": "Create a new product"
-          },
-          "response": []
-        },
-        {
-          "name": "Update Product",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": 1,\n  \"name\": \"Updated Product\",\n  \"description\": \"Updated description\",\n  \"price\": 29.99,\n  \"category\": \"Medicine\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/products/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products", "1"]
-            },
-            "description": "Update an existing product"
-          },
-          "response": []
-        },
-        {
-          "name": "Partial Update Product",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/merge-patch+json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Partially Updated Product\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/products/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products", "1"]
-            },
-            "description": "Partially update a product"
-          },
-          "response": []
-        },
-        {
-          "name": "Get All Products",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/products",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products"]
-            },
-            "description": "Get all products"
-          },
-          "response": []
-        },
-        {
-          "name": "Get Product by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/products/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products", "1"]
-            },
-            "description": "Get product by ID"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Product",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/products/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "products", "1"]
-            },
-            "description": "Delete product by ID"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Pharmacies",
-      "item": [
-        {
-          "name": "Create Pharmacy",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Sample Pharmacy\",\n  \"address\": \"123 Main St\",\n  \"city\": \"City\",\n  \"phone\": \"555-1234\"\n}"
+              "raw": "{\n  \"name\": \"Test Pharmacy\",\n  \"address\": \"123 Main Street, City\",\n  \"email\": \"contact@testpharmacy.com\",\n  \"phone\": \"+1234567890\",\n  \"website\": \"https://testpharmacy.com\",\n  \"active\": true\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/pharmacies",
               "host": ["{{baseUrl}}"],
               "path": ["api", "pharmacies"]
-            },
-            "description": "Create a new pharmacy"
-          },
-          "response": []
-        },
-        {
-          "name": "Update Pharmacy",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": 1,\n  \"name\": \"Updated Pharmacy\",\n  \"address\": \"456 Main St\",\n  \"city\": \"New City\",\n  \"phone\": \"555-5678\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/pharmacies/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pharmacies", "1"]
-            },
-            "description": "Update an existing pharmacy"
-          },
-          "response": []
-        },
-        {
-          "name": "Partial Update Pharmacy",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/merge-patch+json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Partially Updated Pharmacy\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/pharmacies/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pharmacies", "1"]
-            },
-            "description": "Partially update a pharmacy"
+            }
           },
           "response": []
         },
@@ -706,16 +121,28 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pharmacies",
+              "raw": "{{baseUrl}}/api/pharmacies?page=0&size=10&sort=name,asc",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "pharmacies"]
-            },
-            "description": "Get all pharmacies"
+              "path": ["api", "pharmacies"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "name,asc"
+                }
+              ]
+            }
           },
           "response": []
         },
@@ -726,394 +153,468 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/pharmacies/1",
+              "raw": "{{baseUrl}}/api/pharmacies/{{pharmacyId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "pharmacies", "1"]
-            },
-            "description": "Get pharmacy by ID"
+              "path": ["api", "pharmacies", "{{pharmacyId}}"]
+            }
           },
           "response": []
         },
         {
-          "name": "Delete Pharmacy",
+          "name": "Update Pharmacy",
           "request": {
-            "method": "DELETE",
+            "method": "PUT",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/pharmacies/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "pharmacies", "1"]
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{pharmacyId}},\n  \"name\": \"Updated Test Pharmacy\",\n  \"address\": \"456 Updated Street, City\",\n  \"email\": \"updated@testpharmacy.com\",\n  \"phone\": \"+1987654321\",\n  \"website\": \"https://updatedtestpharmacy.com\",\n  \"active\": true\n}"
             },
-            "description": "Delete pharmacy by ID"
+            "url": {
+              "raw": "{{baseUrl}}/api/pharmacies/{{pharmacyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pharmacies", "{{pharmacyId}}"]
+            }
           },
           "response": []
-        }
-      ]
-    },
-    {
-      "name": "Notifications",
-      "item": [
+        },
         {
-          "name": "Create Notification",
+          "name": "Register Pharmacy (Public)",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Sample Notification\",\n  \"message\": \"This is a sample notification message\",\n  \"type\": \"INFO\",\n  \"read\": false\n}"
+              "raw": "{\n  \"pharmacyName\": \"New Pharmacy Registration\",\n  \"address\": \"789 New Street, City\",\n  \"pharmacyEmail\": \"newpharmacy@registration.com\",\n  \"phone\": \"+1111111111\",\n  \"website\": \"https://newpharmacy.com\",\n  \"adminLogin\": \"newpharmacyadmin\",\n  \"adminFirstName\": \"Pharmacy\",\n  \"adminLastName\": \"Admin\",\n  \"adminEmail\": \"admin@newpharmacy.com\",\n  \"adminPassword\": \"Password123!\",\n  \"langKey\": \"en\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/notifications",
+              "raw": "{{baseUrl}}/api/register-pharmacy",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications"]
-            },
-            "description": "Create a new notification"
-          },
-          "response": []
-        },
-        {
-          "name": "Update Notification",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": 1,\n  \"title\": \"Updated Notification\",\n  \"message\": \"This is an updated notification message\",\n  \"type\": \"WARNING\",\n  \"read\": true\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "1"]
-            },
-            "description": "Update an existing notification"
-          },
-          "response": []
-        },
-        {
-          "name": "Partial Update Notification",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/merge-patch+json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Partially Updated Notification\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "1"]
-            },
-            "description": "Partially update a notification"
-          },
-          "response": []
-        },
-        {
-          "name": "Get All Notifications",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications"]
-            },
-            "description": "Get all notifications"
-          },
-          "response": []
-        },
-        {
-          "name": "Get Notification by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "1"]
-            },
-            "description": "Get notification by ID"
-          },
-          "response": []
-        },
-        {
-          "name": "Get My Notifications",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/my",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "my"]
-            },
-            "description": "Get current user's notifications"
-          },
-          "response": []
-        },
-        {
-          "name": "Get My Pharmacy Notifications",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/my-pharmacy",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "my-pharmacy"]
-            },
-            "description": "Get notifications for current user's pharmacy"
-          },
-          "response": []
-        },
-        {
-          "name": "Get Unread Notifications",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/unread",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "unread"]
-            },
-            "description": "Get unread notifications for current user"
-          },
-          "response": []
-        },
-        {
-          "name": "Count Unread Notifications",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/unread/count",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "unread", "count"]
-            },
-            "description": "Count unread notifications for current user"
-          },
-          "response": []
-        },
-        {
-          "name": "Mark Notification as Read",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/1/mark-as-read",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "1", "mark-as-read"]
-            },
-            "description": "Mark a notification as read"
-          },
-          "response": []
-        },
-        {
-          "name": "Mark All Notifications as Read",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/mark-all-as-read",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "mark-all-as-read"]
-            },
-            "description": "Mark all notifications as read for current user"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Notification",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/notifications/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "notifications", "1"]
-            },
-            "description": "Delete notification by ID"
+              "path": ["api", "register-pharmacy"]
+            }
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Watch List Items",
+      "name": "User Management",
+      "item": [
+        {
+          "name": "Create User (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseJson = pm.response.json();",
+                  "pm.globals.set('userId', responseJson.id);",
+                  "pm.test('User created successfully', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson.login).to.eql('testuser');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"testuser\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\",\n  \"imageUrl\": \"\",\n  \"langKey\": \"en\",\n  \"authorities\": [\"ROLE_USER\"],\n  \"pharmacyId\": {{pharmacyId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users?page=0&size=10&sort=login,asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "login,asc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by Login",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/testuser",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "testuser"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{userId}},\n  \"login\": \"testuser\",\n  \"firstName\": \"Updated Test\",\n  \"lastName\": \"User\",\n  \"email\": \"updatedtestuser@example.com\",\n  \"imageUrl\": \"\",\n  \"langKey\": \"en\",\n  \"authorities\": [\"ROLE_USER\"],\n  \"pharmacyId\": {{pharmacyId}},\n  \"activated\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/testuser",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "testuser"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/testuser",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "testuser"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current Account",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/account",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "account"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Current Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated Admin\",\n  \"lastName\": \"User\",\n  \"email\": \"admin@updated.com\",\n  \"langKey\": \"en\",\n  \"imageUrl\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/account",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "account"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"admin\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmPassword\": \"NewPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/account/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "account", "change-password"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Product Management",
+      "item": [
+        {
+          "name": "Create Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseJson = pm.response.json();",
+                  "pm.globals.set('productId', responseJson.id);",
+                  "pm.test('Product created successfully', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson.name).to.eql('Test Product');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Product\",\n  \"code\": \"TP001\",\n  \"officialUrl\": \"https://testproduct.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?page=0&size=10&sort=name,asc&name=Test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "name,asc"
+                },
+                {
+                  "key": "name",
+                  "value": "Test"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{productId}},\n  \"name\": \"Updated Test Product\",\n  \"code\": \"UTP001\",\n  \"officialUrl\": \"https://updatedtestproduct.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", "{{productId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Watch List Management",
       "item": [
         {
           "name": "Create Watch List Item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseJson = pm.response.json();",
+                  "pm.globals.set('watchListId', responseJson.id);",
+                  "pm.test('Watch List Item created successfully', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson.lastAvailability).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
-                "key": "Content-Type",
-                "value": "application/json"
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
               },
               {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"productName\": \"Watched Product\",\n  \"targetPrice\": 15.99,\n  \"active\": true\n}"
+              "raw": "{\n  \"lastAvailability\": true,\n  \"lastAvailabilityTime\": \"2025-12-24T10:00:00Z\",\n  \"notifyAllUsers\": true,\n  \"product\": {\n    \"id\": {{productId}}\n  },\n  \"pharmacy\": {\n    \"id\": {{pharmacyId}}\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/watch-list-items",
               "host": ["{{baseUrl}}"],
               "path": ["api", "watch-list-items"]
-            },
-            "description": "Create a new watch list item"
-          },
-          "response": []
-        },
-        {
-          "name": "Update Watch List Item",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": 1,\n  \"productName\": \"Updated Watched Product\",\n  \"targetPrice\": 12.99,\n  \"active\": false\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/watch-list-items/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "watch-list-items", "1"]
-            },
-            "description": "Update an existing watch list item"
-          },
-          "response": []
-        },
-        {
-          "name": "Partial Update Watch List Item",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/merge-patch+json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"targetPrice\": 10.99\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/watch-list-items/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "watch-list-items", "1"]
-            },
-            "description": "Partially update a watch list item"
+            }
           },
           "response": []
         },
@@ -1124,16 +625,32 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/watch-list-items",
+              "raw": "{{baseUrl}}/api/watch-list-items?page=0&size=10&sort=lastAvailabilityTime,desc&pharmacyId={{pharmacyId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "watch-list-items"]
-            },
-            "description": "Get all watch list items"
+              "path": ["api", "watch-list-items"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "lastAvailabilityTime,desc"
+                },
+                {
+                  "key": "pharmacyId",
+                  "value": "{{pharmacyId}}"
+                }
+              ]
+            }
           },
           "response": []
         },
@@ -1144,16 +661,40 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/watch-list-items/1",
+              "raw": "{{baseUrl}}/api/watch-list-items/{{watchListId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "watch-list-items", "1"]
+              "path": ["api", "watch-list-items", "{{watchListId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Watch List Item",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{watchListId}},\n  \"lastAvailability\": false,\n  \"lastAvailabilityTime\": \"2025-12-24T11:00:00Z\",\n  \"notifyAllUsers\": false,\n  \"product\": {\n    \"id\": {{productId}}\n  },\n  \"pharmacy\": {\n    \"id\": {{pharmacyId}}\n  }\n}"
             },
-            "description": "Get watch list item by ID"
+            "url": {
+              "raw": "{{baseUrl}}/api/watch-list-items/{{watchListId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "watch-list-items", "{{watchListId}}"]
+            }
           },
           "response": []
         },
@@ -1164,31 +705,411 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
+                "value": "Bearer {{authToken}}"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/watch-list-items/1",
+              "raw": "{{baseUrl}}/api/watch-list-items/{{watchListId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "watch-list-items", "1"]
+              "path": ["api", "watch-list-items", "{{watchListId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notification Management",
+      "item": [
+        {
+          "name": "Create Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var responseJson = pm.response.json();",
+                  "pm.globals.set('notificationId', responseJson.id);",
+                  "pm.test('Notification created successfully', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    pm.expect(responseJson).to.have.property('id');",
+                  "    pm.expect(responseJson.notificationType).to.eql('EMAIL');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notificationType\": \"EMAIL\",\n  \"message\": \"Test notification message for product availability\",\n  \"sent\": false,\n  \"delivered\": false,\n  \"failed\": false,\n  \"user\": {\n    \"id\": {{userId}}\n  },\n  \"pharmacy\": {\n    \"id\": {{pharmacyId}}\n  },\n  \"watchListItem\": {\n    \"id\": {{watchListId}}\n  }\n}"
             },
-            "description": "Delete watch list item by ID"
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications?page=0&size=10&sort=sentAt,desc&notificationType=EMAIL&sent=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "sentAt,desc"
+                },
+                {
+                  "key": "notificationType",
+                  "value": "EMAIL"
+                },
+                {
+                  "key": "sent",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notification by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/{{notificationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "{{notificationId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Notification",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{notificationId}},\n  \"notificationType\": \"SMS\",\n  \"message\": \"Updated notification message\",\n  \"sent\": true,\n  \"delivered\": false,\n  \"failed\": false,\n  \"user\": {\n    \"id\": {{userId}}\n  },\n  \"pharmacy\": {\n    \"id\": {{pharmacyId}}\n  },\n  \"watchListItem\": {\n    \"id\": {{watchListId}}\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/{{notificationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "{{notificationId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/my?page=0&size=10&sort=createdDate,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "my"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "createdDate,desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Pharmacy Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/my-pharmacy?page=0&size=10&sort=createdDate,desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "my-pharmacy"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "createdDate,desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/unread",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "unread"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Unread Notifications Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/unread/count",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "unread", "count"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/{{notificationId}}/mark-as-read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "{{notificationId}}", "mark-as-read"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/mark-all-as-read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "mark-all-as-read"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/{{notificationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "{{notificationId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Authority Management",
+      "item": [
+        {
+          "name": "Create Authority",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ROLE_TEST\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/authorities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "authorities"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Authorities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/authorities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "authorities"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Authority by Name",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/authorities/ROLE_ADMIN",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "authorities", "ROLE_ADMIN"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Authority",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/authorities/ROLE_TEST",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "authorities", "ROLE_TEST"]
+            }
           },
           "response": []
         }
       ]
     }
   ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:8080",
-      "type": "string"
-    },
-    {
-      "key": "token",
-      "value": "",
       "type": "string"
     }
   ]

@@ -1,5 +1,6 @@
 package com.zidir.medcom.web.rest;
 
+import com.zidir.medcom.domain.Pharmacy;
 import com.zidir.medcom.domain.User;
 import com.zidir.medcom.repository.UserRepository;
 import com.zidir.medcom.security.SecurityUtils;
@@ -10,6 +11,7 @@ import com.zidir.medcom.service.dto.PasswordChangeDTO;
 import com.zidir.medcom.web.rest.errors.*;
 import com.zidir.medcom.web.rest.vm.KeyAndPasswordVM;
 import com.zidir.medcom.web.rest.vm.ManagedUserVM;
+import com.zidir.medcom.web.rest.vm.PharmacyRegistrationVM;
 import jakarta.validation.Valid;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
@@ -48,12 +50,14 @@ public class AccountResource {
 
     /**
      * {@code POST  /register} : register the user.
+     * DISABLED: Public registration is disabled. Users must be created by pharmacy admins.
      *
      * @param managedUserVM the managed user View Model.
      * @throws InvalidPasswordException {@code 400 (Bad Request)} if the password is incorrect.
      * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
      * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already used.
      */
+    /*
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public void registerAccount(@Valid @RequestBody ManagedUserVM managedUserVM) {
@@ -62,6 +66,59 @@ public class AccountResource {
         }
         User user = userService.registerUser(managedUserVM, managedUserVM.getPassword());
         mailService.sendActivationEmail(user);
+    }
+    */
+
+    /**
+     * {@code POST  /register-pharmacy} : register a pharmacy with its admin user.
+     *
+     * @param pharmacyRegistrationVM the pharmacy registration data.
+     * @throws InvalidPasswordException {@code 400 (Bad Request)} if the password is incorrect.
+     * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
+     * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already used.
+     */
+    @PostMapping("/register-pharmacy")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void registerPharmacy(@Valid @RequestBody PharmacyRegistrationVM pharmacyRegistrationVM) {
+        if (isPasswordLengthInvalid(pharmacyRegistrationVM.getAdminPassword())) {
+            throw new InvalidPasswordException();
+        }
+
+        // Check if login already exists
+        userRepository
+            .findOneByLogin(pharmacyRegistrationVM.getAdminLogin().toLowerCase())
+            .ifPresent(existingUser -> {
+                throw new LoginAlreadyUsedException();
+            });
+
+        // Check if email already exists
+        userRepository
+            .findOneByEmailIgnoreCase(pharmacyRegistrationVM.getAdminEmail())
+            .ifPresent(existingUser -> {
+                throw new EmailAlreadyUsedException();
+            });
+
+        // Create pharmacy entity
+        Pharmacy pharmacy = new Pharmacy();
+        pharmacy.setName(pharmacyRegistrationVM.getPharmacyName());
+        pharmacy.setAddress(pharmacyRegistrationVM.getAddress());
+        pharmacy.setEmail(pharmacyRegistrationVM.getPharmacyEmail());
+        pharmacy.setPhone(pharmacyRegistrationVM.getPhone());
+        pharmacy.setWebsite(pharmacyRegistrationVM.getWebsite());
+        pharmacy.setActive(true);
+
+        // Create admin user DTO
+        AdminUserDTO adminUserDTO = new AdminUserDTO();
+        adminUserDTO.setLogin(pharmacyRegistrationVM.getAdminLogin());
+        adminUserDTO.setFirstName(pharmacyRegistrationVM.getAdminFirstName());
+        adminUserDTO.setLastName(pharmacyRegistrationVM.getAdminLastName());
+        adminUserDTO.setEmail(pharmacyRegistrationVM.getAdminEmail());
+        adminUserDTO.setLangKey(pharmacyRegistrationVM.getLangKey());
+        adminUserDTO.setActivated(true);
+
+        // Register pharmacy with admin
+        User adminUser = userService.registerPharmacyWithAdmin(pharmacy, adminUserDTO, pharmacyRegistrationVM.getAdminPassword());
+        LOG.debug("Pharmacy and admin user created successfully: pharmacy={}, admin={}", pharmacy.getName(), adminUser.getLogin());
     }
 
     /**

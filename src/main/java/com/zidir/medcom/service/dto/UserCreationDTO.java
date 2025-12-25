@@ -2,18 +2,16 @@ package com.zidir.medcom.service.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.zidir.medcom.config.Constants;
-import com.zidir.medcom.domain.Authority;
-import com.zidir.medcom.domain.User;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
- * A DTO representing a user, with his authorities.
+ * A DTO for creating a user, without the pharmacyId field which is automatically set by the system.
+ * This DTO is used for user creation endpoints to prevent API consumers from setting the pharmacy ID.
  */
-public class AdminUserDTO implements Serializable {
+public class UserCreationDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -42,42 +40,23 @@ public class AdminUserDTO implements Serializable {
     @Size(min = 2, max = 10)
     private String langKey;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private String createdBy;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private Instant createdDate;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private String lastModifiedBy;
-
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private Instant lastModifiedDate;
-
     private Set<String> authorities;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private Long pharmacyId;
-
-    public AdminUserDTO() {
+    public UserCreationDTO() {
         // Empty constructor needed for Jackson.
     }
 
-    public AdminUserDTO(User user) {
-        this.id = user.getId();
-        this.login = user.getLogin();
-        this.firstName = user.getFirstName();
-        this.lastName = user.getLastName();
-        this.email = user.getEmail();
-        this.activated = user.isActivated();
-        this.imageUrl = user.getImageUrl();
-        this.langKey = user.getLangKey();
-        this.createdBy = user.getCreatedBy();
-        this.createdDate = user.getCreatedDate();
-        this.lastModifiedBy = user.getLastModifiedBy();
-        this.lastModifiedDate = user.getLastModifiedDate();
-        this.authorities = user.getAuthorities().stream().map(Authority::getName).collect(Collectors.toSet());
-        this.pharmacyId = user.getPharmacy() != null ? user.getPharmacy().getId() : null;
+    // Copy constructor from AdminUserDTO to convert when needed
+    public UserCreationDTO(AdminUserDTO adminUserDTO) {
+        this.id = adminUserDTO.getId();
+        this.login = adminUserDTO.getLogin();
+        this.firstName = adminUserDTO.getFirstName();
+        this.lastName = adminUserDTO.getLastName();
+        this.email = adminUserDTO.getEmail();
+        this.activated = adminUserDTO.isActivated();
+        this.imageUrl = adminUserDTO.getImageUrl();
+        this.langKey = adminUserDTO.getLangKey();
+        this.authorities = adminUserDTO.getAuthorities();
     }
 
     public Long getId() {
@@ -144,38 +123,6 @@ public class AdminUserDTO implements Serializable {
         this.langKey = langKey;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public Instant getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Instant createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public String getLastModifiedBy() {
-        return lastModifiedBy;
-    }
-
-    public void setLastModifiedBy(String lastModifiedBy) {
-        this.lastModifiedBy = lastModifiedBy;
-    }
-
-    public Instant getLastModifiedDate() {
-        return lastModifiedDate;
-    }
-
-    public void setLastModifiedDate(Instant lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
-    }
-
     public Set<String> getAuthorities() {
         return authorities;
     }
@@ -184,18 +131,10 @@ public class AdminUserDTO implements Serializable {
         this.authorities = authorities;
     }
 
-    public Long getPharmacyId() {
-        return pharmacyId;
-    }
-
-    public void setPharmacyId(Long pharmacyId) {
-        this.pharmacyId = pharmacyId;
-    }
-
     // prettier-ignore
     @Override
     public String toString() {
-        return "AdminUserDTO{" +
+        return "UserCreationDTO{" +
             "login='" + login + '\'' +
             ", firstName='" + firstName + '\'' +
             ", lastName='" + lastName + '\'' +
@@ -203,12 +142,7 @@ public class AdminUserDTO implements Serializable {
             ", imageUrl='" + imageUrl + '\'' +
             ", activated=" + activated +
             ", langKey='" + langKey + '\'' +
-            ", createdBy=" + createdBy +
-            ", createdDate=" + createdDate +
-            ", lastModifiedBy='" + lastModifiedBy + '\'' +
-            ", lastModifiedDate=" + lastModifiedDate +
             ", authorities=" + authorities +
-            ", pharmacyId=" + pharmacyId +
             "}";
     }
 }

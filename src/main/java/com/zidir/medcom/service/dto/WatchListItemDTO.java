@@ -1,5 +1,6 @@
 package com.zidir.medcom.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -18,10 +19,12 @@ public class WatchListItemDTO implements Serializable {
 
     private Boolean notifyAllUsers;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UserDTO createdBy;
 
     private ProductDTO product;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private PharmacyDTO pharmacy;
 
     public Long getId() {

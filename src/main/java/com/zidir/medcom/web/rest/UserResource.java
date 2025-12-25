@@ -7,9 +7,11 @@ import com.zidir.medcom.security.AuthoritiesConstants;
 import com.zidir.medcom.service.MailService;
 import com.zidir.medcom.service.UserService;
 import com.zidir.medcom.service.dto.AdminUserDTO;
+import com.zidir.medcom.service.dto.UserCreationDTO;
 import com.zidir.medcom.web.rest.errors.BadRequestAlertException;
 import com.zidir.medcom.web.rest.errors.EmailAlreadyUsedException;
 import com.zidir.medcom.web.rest.errors.LoginAlreadyUsedException;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import java.net.URI;
@@ -98,25 +100,52 @@ public class UserResource {
      * Creates a new user if the login and email are not already used, and sends a
      * mail with an activation link.
      * The user needs to be activated on creation.
+     * The pharmacy ID is automatically set based on the current admin's pharmacy.
      *
-     * @param userDTO the user to create.
+     * @param userCreationDTO the user to create (without pharmacyId which is set automatically).
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new user, or with status {@code 400 (Bad Request)} if the login or email is already in use.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      * @throws BadRequestAlertException {@code 400 (Bad Request)} if the login or email is already in use.
      */
     @PostMapping("/users")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<User> createUser(@Valid @RequestBody AdminUserDTO userDTO) throws URISyntaxException {
-        LOG.debug("REST request to save User : {}", userDTO);
+    @Operation(operationId = "createUser")
+    public ResponseEntity<User> createUser(@Valid @RequestBody UserCreationDTO userCreationDTO) throws URISyntaxException {
+        LOG.debug("REST request to save User : {}", userCreationDTO);
 
-        if (userDTO.getId() != null) {
+        if (userCreationDTO.getId() != null) {
             throw new BadRequestAlertException("A new user cannot already have an ID", "userManagement", "idexists");
             // Lowercase the user login before comparing with database
-        } else if (userRepository.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
+        } else if (userRepository.findOneByLogin(userCreationDTO.getLogin().toLowerCase()).isPresent()) {
             throw new LoginAlreadyUsedException();
-        } else if (userRepository.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
+        } else if (userRepository.findOneByEmailIgnoreCase(userCreationDTO.getEmail()).isPresent()) {
             throw new EmailAlreadyUsedException();
         } else {
+            // Automatically link the new user to the admin's pharmacy
+            User currentAdmin = userService
+                .getUserWithAuthorities()
+                .orElseThrow(() -> new BadRequestAlertException("Current user not found", "userManagement", "usernotfound"));
+
+            // Convert UserCreationDTO to AdminUserDTO and set the pharmacy ID automatically
+            AdminUserDTO userDTO = new AdminUserDTO();
+            userDTO.setId(userCreationDTO.getId());
+            userDTO.setLogin(userCreationDTO.getLogin());
+            userDTO.setFirstName(userCreationDTO.getFirstName());
+            userDTO.setLastName(userCreationDTO.getLastName());
+            userDTO.setEmail(userCreationDTO.getEmail());
+            userDTO.setImageUrl(userCreationDTO.getImageUrl());
+            userDTO.setActivated(userCreationDTO.isActivated());
+            userDTO.setLangKey(userCreationDTO.getLangKey());
+            userDTO.setAuthorities(userCreationDTO.getAuthorities());
+            // Note: Audit fields (createdBy, createdDate, lastModifiedBy, lastModifiedDate) are auto-managed by JPA auditing
+
+            if (currentAdmin.getPharmacy() != null) {
+                userDTO.setPharmacyId(currentAdmin.getPharmacy().getId());
+                LOG.debug("Linking new user to pharmacy ID: {}", currentAdmin.getPharmacy().getId());
+            } else {
+                throw new BadRequestAlertException("Admin user is not linked to a pharmacy", "userManagement", "nopharmacy");
+            }
+
             User newUser = userService.createUser(userDTO);
             mailService.sendCreationEmail(newUser);
             return ResponseEntity.created(new URI("/api/admin/users/" + newUser.getLogin()))
@@ -126,20 +155,32 @@ public class UserResource {
     }
 
     /**
-     * {@code PUT /admin/users} : Updates an existing User.
+     * {@code PUT /admin/users/:login} : Updates an existing User.
      *
+     * @param login the login of the user to update.
      * @param userDTO the user to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated user.
      * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already in use.
      * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already in use.
      */
-    @PutMapping({ "/users", "/users/{login}" })
+    @PutMapping("/users/{login}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @Operation(operationId = "updateUser")
     public ResponseEntity<AdminUserDTO> updateUser(
-        @PathVariable(name = "login", required = false) @Pattern(regexp = Constants.LOGIN_REGEX) String login,
+        @PathVariable @Pattern(regexp = Constants.LOGIN_REGEX) String login,
         @Valid @RequestBody AdminUserDTO userDTO
     ) {
-        LOG.debug("REST request to update User : {}", userDTO);
+        LOG.debug("REST request to update User with login: {} - User DTO: {}", login, userDTO);
+
+        // Verify the login in path matches the user in the DTO
+        Optional<User> userFromLogin = userRepository.findOneByLogin(login);
+        if (userFromLogin.isEmpty()) {
+            throw new BadRequestAlertException("User not found", "userManagement", "usernotfound");
+        }
+        if (!userFromLogin.get().getId().equals(userDTO.getId())) {
+            throw new BadRequestAlertException("User ID in body does not match user in path", "userManagement", "idmismatch");
+        }
+
         Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.orElseThrow().getId().equals(userDTO.getId()))) {
             throw new EmailAlreadyUsedException();
@@ -164,6 +205,7 @@ public class UserResource {
      */
     @GetMapping("/users")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @Operation(operationId = "getAllUsers")
     public ResponseEntity<List<AdminUserDTO>> getAllUsers(@org.springdoc.core.annotations.ParameterObject Pageable pageable) {
         LOG.debug("REST request to get all User for an admin");
         if (!onlyContainsAllowedProperties(pageable)) {
@@ -187,6 +229,7 @@ public class UserResource {
      */
     @GetMapping("/users/{login}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @Operation(operationId = "getUser")
     public ResponseEntity<AdminUserDTO> getUser(@PathVariable("login") @Pattern(regexp = Constants.LOGIN_REGEX) String login) {
         LOG.debug("REST request to get User : {}", login);
         return ResponseUtil.wrapOrNotFound(userService.getUserWithAuthoritiesByLogin(login).map(AdminUserDTO::new));
@@ -200,6 +243,7 @@ public class UserResource {
      */
     @DeleteMapping("/users/{login}")
     @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @Operation(operationId = "deleteUser")
     public ResponseEntity<Void> deleteUser(@PathVariable("login") @Pattern(regexp = Constants.LOGIN_REGEX) String login) {
         LOG.debug("REST request to delete User: {}", login);
         userService.deleteUser(login);

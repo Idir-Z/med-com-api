@@ -1,5 +1,6 @@
 package com.zidir.medcom.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.zidir.medcom.domain.enumeration.NotificationType;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
@@ -37,8 +38,10 @@ public class NotificationDTO implements Serializable {
 
     private String externalMessageId;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private PharmacyDTO pharmacy;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private UserDTO user;
 
     private WatchListItemDTO watchListItem;
